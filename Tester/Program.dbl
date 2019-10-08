@@ -1,0 +1,109 @@
+import System
+import System.Net.Http
+import Newtonsoft.Json
+import Newtonsoft.Json.Linq
+import System.Text
+import System.Threading.Tasks
+import System.Collections.Generic
+
+namespace Tester
+    public class Tester
+        public static async method Transfer, @Task
+            client, @HttpClient
+            account, int
+            target, int
+            amount, decimal
+        proc
+            data transferData = new JObject()
+            transferData.Add("Source", (@JToken)new JValue(account))
+            transferData.Add("Target", (@JToken)new JValue(target))
+            transferData.Add("Amount", (@JToken)new JValue(amount))
+            data transferBody = new StringContent(JsonConvert.SerializeObject(transferData), Encoding.UTF8, "application/json")
+            data transferResult = await client.PostAsync("Accounts/Transfer", transferBody)
+            ;;we use this status code to mean that you tried to do something that would have brought an account balance below 0
+            ;;so its an acceptable response code we can just move on
+            if(transferResult.StatusCode != System.Net.HttpStatusCode.UnprocessableEntity)
+                transferResult.EnsureSuccessStatusCode()
+        endmethod
+
+
+        public static async method TransferRandom, @Task
+            client, @HttpClient
+            count, int
+            numberOfAccounts, int
+        proc
+            Console.WriteLine("Starting Transfers")
+            data rnd = new Random()
+            data i = 0
+            for i from 1 thru count by 1
+            begin
+                data source = rnd.Next(1, numberOfAccounts)
+                data target = rnd.Next(1, numberOfAccounts)
+                if(source == target)
+                    nextloop
+
+                await Transfer(client, source, target, 12.5)
+            end
+
+            Console.WriteLine("Finished Transfers")
+        endmethod
+
+    endclass
+
+endnamespace
+
+
+main
+proc
+    lambda certcallback(sender, cert, chain, errors)
+    begin
+        mreturn true
+    end
+
+    data handler = new HttpClientHandler()
+    handler.ClientCertificateOptions = ClientCertificateOption.Manual
+    handler.ServerCertificateCustomValidationCallback = certcallback
+
+    data client = new HttpClient(handler)
+    client.Timeout = TimeSpan.FromSeconds(5)
+    data commandLineArgs = Environment.GetCommandLineArgs()
+    data i = 0
+	
+    ;;Login would happen here
+    ;;
+    ;;data loginContent = new StringContent(JsonConvert.SerializeObject(new JObject() { {"Username", "myusername" }, {"Password", "mypassword"} }))
+    ;;data loginResult = client.PostAsync("https://localhost:8086/odata/Login", loginContent).Result
+    ;;data loginResultObject = ^as(JsonConvert.DeserializeObject(loginResult.Content.ReadAsStringAsync().Result), @JObject)
+    ;;data loginJwt = loginResultObject.GetValue("token_property_name").ToObject<string>()
+    ;;client.DefaultRequestHeaders.Add("Authorization", "Bearer " + loginJwt)
+    ;;requests made by client would now be logged in
+	
+    ;;get the accounts
+    ;;on each thread
+    ;;  pick two accounts at random
+    ;;  make jsonpatchdoc
+	
+
+    client.BaseAddress = new Uri("https://localhost:8086/odata/")
+    
+    
+	data workerTasks = new List<Task>()
+    for i from 1 thru 8 by 1
+    begin
+        workerTasks.Add(Tester.Tester.TransferRandom(client, 1000, 10000))
+    end
+
+    Task.WaitAll(workerTasks.ToArray())
+
+
+    data accountResult = ^as(JsonConvert.DeserializeObject(client.GetStringAsync("Accounts").Result), @JObject)
+    data accountObject, @JObject
+    data totalAccountBalance, decimal, 0
+    foreach accountObject in accountResult.GetValue("value").ToObject<JArray>()
+    begin
+        totalAccountBalance += accountObject.GetValue("Balance").ToObject<decimal>()
+    end
+
+    Console.WriteLine("done total account balance was {0}", totalAccountBalance)
+    Console.ReadKey()
+endmain
