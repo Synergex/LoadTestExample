@@ -15,9 +15,11 @@ import Harmony.Core.Context
 import Harmony.OData
 import Microsoft.EntityFrameworkCore
 import Microsoft.OData.Edm
-import Microsoft.AspNet.OData.Builder
+import Microsoft.AspNetCore.Mvc
 import System.Collections.Generic
 import LoadTest.Models
+import Microsoft.OData.ModelBuilder
+
 
 namespace LoadTest
 
@@ -46,7 +48,7 @@ namespace LoadTest
             required in serviceProvider, @IServiceProvider
         proc
             if(mEdmModel == ^null)
-                mEdmModel = GetEdmModel(new ODataConventionModelBuilder(serviceProvider), serviceProvider)
+                mEdmModel = GetEdmModel(new ODataConventionModelBuilder(), serviceProvider)
             mreturn mEdmModel
         endmethod
 

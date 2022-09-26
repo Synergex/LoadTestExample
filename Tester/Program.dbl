@@ -72,7 +72,7 @@ proc
     ;;Login would happen here
     ;;
     ;;data loginContent = new StringContent(JsonConvert.SerializeObject(new JObject() { {"Username", "myusername" }, {"Password", "mypassword"} }))
-    ;;data loginResult = client.PostAsync("https://localhost:8086/odata/Login", loginContent).Result
+    ;;data loginResult = client.PostAsync("https://localhost:8086/odata/v1/Login", loginContent).Result
     ;;data loginResultObject = ^as(JsonConvert.DeserializeObject(loginResult.Content.ReadAsStringAsync().Result), @JObject)
     ;;data loginJwt = loginResultObject.GetValue("token_property_name").ToObject<string>()
     ;;client.DefaultRequestHeaders.Add("Authorization", "Bearer " + loginJwt)
@@ -84,7 +84,7 @@ proc
     ;;  make jsonpatchdoc
 	
 
-    client.BaseAddress = new Uri("https://localhost:8086/odata/")
+    client.BaseAddress = new Uri("https://localhost:8086/odata/v1/")
     
     
 	data workerTasks = new List<Task>()

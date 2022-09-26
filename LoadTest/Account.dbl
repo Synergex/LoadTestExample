@@ -17,6 +17,10 @@ import System.ComponentModel.DataAnnotations
 import System.Text
 import Harmony.Core
 import Harmony.Core.Converters
+import Harmony.Core.Context
+import Harmony.Core.FileIO
+import Microsoft.Extensions.DependencyInjection
+import System.Runtime.Serialization
 
 namespace LoadTest.Models
 
@@ -25,7 +29,7 @@ namespace LoadTest.Models
         ;;make the record available and a copy
         private mSynergyData, strAccount
         private mOriginalSynergyData, strAccount
-
+        private mGlobalRFA, a10
         private static sMetadata, @AccountMetadata
 
 .region "Constructors"
@@ -123,6 +127,17 @@ namespace LoadTest.Models
             endmethod
         endproperty
 
+        public override property GlobalRFA, [#]byte
+            method get
+            proc
+                mreturn mGlobalRFA
+            endmethod
+            method set
+            proc
+                mGlobalRFA = value
+            endmethod
+        endproperty
+
 .endregion
 
 .region "Public methods"
@@ -139,8 +154,41 @@ namespace LoadTest.Models
         ;;; <summary>
         ;;; Allow the host to validate all fields. Each field will fire the validation method.
         ;;; </summary>
-        public override method InitialValidateData, void
+       ;; public override method InitialValidateData, void
+        ;;proc
+        ;;endmethod
+
+        public override method Validate, void
+            required in vType, ValidationType
+            required in sp, @IServiceProvider
         proc
+            ;;No relation validation if the record is being deleted
+            if (vType == ValidationType.Delete)
+                mreturn
+
+            ;;Get an instance of IDataObjectProvider
+            data dataObjectProvider, @IDataObjectProvider, sp.GetService<IDataObjectProvider>()
+
+            ;;--------------------------------------------------------------------------------
+            ;;Validate data for relation 1 (REL_Vendor)
+
+            ;;Validation mode: None
+
+            ;;--------------------------------------------------------------------------------
+            ;;Validate data for relation 2 (REL_OrderItems)
+
+            ;;Validation mode: None
+
+            ;;--------------------------------------------------------------------------------
+            ;;If we have a ValidateCustom method, call it
+
+            ValidateCustom(vType,sp)
+
+        endmethod
+
+        private partial method ValidateCustom, void
+            required in vType, ValidationType
+            required in sp, @IServiceProvider
         endmethod
 
         ;;; <summary>

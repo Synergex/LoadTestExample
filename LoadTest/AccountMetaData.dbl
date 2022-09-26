@@ -92,6 +92,14 @@ namespace LoadTest.Models
 
         endmethod
 
+        public override method UpdateExistingJoin, void
+            required in existing, @DataObjectBase
+            required in joinedObjects, [#]KeyValuePair<String, Object>
+        proc
+
+        endmethod
+
+
         ;;; <summary>
         ;;; Formats a literal value for a key lookup.
         ;;; </summary>
